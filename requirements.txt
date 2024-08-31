@@ -1,0 +1,4 @@
+azureml-sdk
+scikit-learn
+joblib
+pytest

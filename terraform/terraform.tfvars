@@ -1,0 +1,6 @@
+location            = "East US"
+resource_group_name = "rg-machine-learning"
+storage_account_name = "mystorageaccount1234"
+ml_workspace_name   = "ml-workspace"
+data_factory_name   = "data-factory"
+aks_cluster_name    = "aks-cluster"

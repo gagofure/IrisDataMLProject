@@ -1,0 +1,63 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  resourceGroup: 'rg-machine-learning'
+  workspaceName: 'ml-workspace'
+  modelName: 'predictive-maintenance-model'
+  serviceName: 'predictive-maintenance-service'
+  terraformVersion: '1.5.1' # Specify the Terraform version you need
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
+    addToPath: true
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+  displayName: 'Install dependencies'
+
+- script: |
+    echo "Installing Terraform..."
+    wget https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
+    unzip terraform_$(terraformVersion)_linux_amd64.zip
+    sudo mv terraform /usr/local/bin/
+    terraform --version
+  displayName: 'Install Terraform'
+
+- script: |
+    echo "Initializing Terraform..."
+    cd terraform
+    terraform init
+  displayName: 'Initialize Terraform'
+
+- script: |
+    echo "Applying Terraform configuration..."
+    cd terraform
+    terraform apply -auto-approve
+  displayName: 'Apply Terraform Configuration'
+
+- script: |
+    echo "Preprocessing data..."
+    python scripts/preprocess.py --output-dir data
+  displayName: 'Preprocess data'
+
+- script: |
+    echo "Training model..."
+    python scripts/train_model.py --input-dir data --output-path model.pkl
+  displayName: 'Train model'
+
+- script: |
+    echo "Scoring model..."
+    python scripts/score_model.py --model-path model.pkl --X-test-path data/X_test.csv --y-test-path data/y_test.csv
+  displayName: 'Score model'
+
+- script: |
+    echo "Deploying model..."
+    python scripts/deploy_model.py --model-path model.pkl
+  displayName: 'Deploy model'
